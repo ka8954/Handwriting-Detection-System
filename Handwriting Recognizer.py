@@ -1,14 +1,22 @@
+from dotenv import load_dotenv
+load_dotenv()
 import easyocr
-
+from supabase import create_client, Client
+import os
 reader = easyocr.Reader(["en", 'en'], gpu=False)
 import PIL
 from PIL import ImageDraw
-
-im = PIL.Image.open(r"D:\Downloads\Files\nr.jpg")
+x = input("Enter the Path of the file : ")
+im = PIL.Image.open(x)
 im
 
-bounds = reader.readtext(r'D:\Downloads\Files\nr.jpg')
+bounds = reader.readtext(x)
 bounds
+
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+
+supabase = create_client(url,key)
 
 def draw_boxes(image, bounds, color='yellow',width=8):
     draw = ImageDraw.Draw(image)
@@ -19,15 +27,17 @@ def draw_boxes(image, bounds, color='yellow',width=8):
 
 draw_boxes(im,bounds)
 
-im.save(r"D:\Downloads\Files\nr.jpg")
+im.save(x)
 
 len(bounds)
+li = []
 
 for i in bounds:
+    li.append(i[1])
     print(i[1])
 
-f=open(r"D:\Downloads\Files\nr.jpg", mode='a', encoding="utf-8")
+f=open(x)
 
-for i in bounds:
-    print(i[1])
-    f.write(i[1])
+d1 = supabase.table("Detect").insert({"Scanned Data":li}).execute()
+assert len(d1.data) > 0
+
